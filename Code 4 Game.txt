@@ -1,0 +1,325 @@
+﻿<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Environmental Choice Game</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #eef6f1;
+        padding: 20px;
+      }
+      table, th, td {
+        border: 1px solid black;
+        border-collapse: collapse;
+        text-align: center;
+      }
+      .score-table {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        max-width: 300px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        flex: 1;
+      }
+      .score-table table {
+        margin: 0 auto;
+      }
+      .question-box {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        max-width: 600px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        flex: 2;
+      }
+
+
+      .game-layout {
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        gap: 5px;
+        flex-wrap: wrap;
+      }
+
+
+      .answers button {
+        display: block;
+        width: 100%;
+        margin: 10px 0;
+        padding: 10px;
+        border-radius: 5px;
+        border: none;
+        background-color: #90caf9;
+        cursor: pointer;
+      }
+      .maps img {
+        max-width: 300px;
+        margin: 10px;
+      }
+      .feedback {
+        font-style: italic;
+        margin-top: 10px;
+      }
+    </style>
+  </head>
+  <body>
+
+
+      <div class="maps" style="text-align: center; margin-top: 30px">
+  <h3>Environmental Maps</h3>
+  <div style="display: flex; justify-content: center; gap: 5px;">
+    <div style="text-align: center;">
+      <img id="airMap" src="air_1.png" alt="Air Quality" style="max-width: 300px;"/>
+      <br/>
+      <img src="air_key.png" alt="Air Quality Key" style="max-width: 300px; margin-top: 5px;"/>
+    </div>
+    <div style="text-align: center;">
+      <img id="forestMap" src="forest_3.png" alt="Forest Level" style="max-width: 300px;"/>
+      <br/>
+      <img src="forest_key.png" alt="Forest Level Key" style="max-width: 100px; margin-top: 5px;"/>
+    </div>
+    <div style="text-align: center;">
+      <img id="tempMap" src="temp_1.png" alt="Temperature" style="max-width: 300px;"/>
+      <img src="temp_key.png" alt="Temperature Key" style="max-width: 23px;"/>
+    </div>
+  </div>
+</div>
+
+
+    <div class="game-layout"> <! formats the question and score boxes>
+      <div class="question-box">
+        <h2 id="question">Loading...</h2>
+        <div class="answers">
+          <button onclick="choose(0)" id="btn0"></button>
+          <button onclick="choose(1)" id="btn1"></button>
+          <button onclick="choose(2)" id="btn2"></button>
+          <button onclick="choose(3)" id="btn3"></button>
+        </div>
+        <div class="feedback" id="feedback"></div>
+        <div style="margin-top: 15px; text-align: center;">
+          <button id="nextButton" onclick="nextQuestion()" style="display: none; padding: 10px 20px;">Next</button>
+        </div>
+      </div>
+      <div class="score-table">
+        <table style="width: 50%" class="center">
+          <tr>
+            <th>Air</th>
+            <th>Forest</th>
+            <th>Temperature</th>
+          </tr>
+          <tr>
+            <td id="airScore">1</td>
+            <td id="forestScore">3</td>
+            <td id="tempScore">1</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+
+    <div id="restartButton" style="text-align: center; margin-top: 20px; display: none"> <! creates/formats restart button>
+      <button onclick="restartGame()" style="padding: 10px 20px; font-size: 16px">
+        Play Again
+      </button>
+    </div>
+
+
+    <script>
+      const questions = [
+        {
+          text: "Your country needs a main source of energy. What do you choose?",
+          answers: [
+            { text: "A. Coal", air: -2, forest: 0, temp: -2, feedback: "You chose coal as your energy source. It's cheap and powerful, but the air quality has taken a serious hit. Coal releases high levels of pollutants and greenhouse gases, worsening both health and climate conditions." },
+            { text: "B. Natural Gas", air: -1, forest: 0, temp: -1, feedback: "Natural gas is cleaner than coal, but still emits carbon dioxide. Your choice slightly worsened air quality and temperature, though not as severely as coal." },
+            { text: "C. Renewable Energy", air: 1, forest: -1, temp: 1, feedback: "Great choice! Renewable energy like wind and solar produces no air pollution and helps cool the planet. Your country is breathing easier already." },
+            { text: "D. Oil", air: -1, forest: 0, temp: -2, feedback: "Oil is energy-dense but dirty. Pollution has increased and the climate is heating up. This fossil fuel is taking its toll." }
+          ]
+        },
+        {
+          text: "How do you manage transportation in major cities?",
+          answers: [
+            { text: "A. Promote electric public transit", air: 1, forest: 0, temp: 1, feedback: "By investing in clean transit, you've slashed vehicle emissions and improved urban air. Citizens are healthier, and the planet thanks you." },
+            { text: "B. Build more highways", air: -1, forest: -1, temp: -2, feedback: "More roads mean more cars—and more pollution. Air quality has dropped, and the added traffic is heating things up." },
+            { text: "C. Encourage carpooling", air: 1, forest: 0, temp: 1, feedback: "Encouraging carpooling helps reduce emissions a bit. It's a step in the right direction, but there's room for bigger improvements." },
+            { text: "D. Do nothing", air: -1, forest: -1, temp: -1, feedback: "Without changes, congestion and pollution continue. The situation hasn't improved, and time is ticking." }
+          ]
+        },
+        {
+          text: "A few small villages in your country have been impacted by drought. What actions do you implement to help feed these small villages?",
+          answers: [
+            { text: "A. Stay patient and let nature run its course", air: -2, forest: 0, temp: -1, feedback: "The drought continues and farmers are left with dying crops. People must drive to nearby towns or ship their food which produces more carbon emissions. By the time the rains come the damage has already been done." },
+            { text: "B. Introduce a new crop to the area that is better suited for the drought", air: 1, forest: 1, temp: 1, feedback: "The new crop thrives even in the drought environment. The crop helps capture carbon in the air, lowering the nearby temperature and provides food for the nearby villages." },
+            { text: "C. Increase agriculture throughout the country and shipping to the villages", air: -2, forest: -2, temp: -1, feedback: "More agriculture increases carbon emissions and requires more land to be cleared for farming. The villages also depend on goods to be shipped in from other farms throughout the country further increasing carbon emissions." },
+            { text: "D. Promote water conservation and rainwater harvesting", air: 1, forest: 0, temp: 0, feedback: "Promoting water conservation and rainwater harvesting are two great ways to not drain your water supply. However, it takes a while for rain to come, and thus it takes a while for farmers to be able to water their plants. This was a neutral option." }
+          ]
+        },
+        {
+          text: "How do you deal with rising sea levels?",
+          answers: [
+            { text: "A. Build sea walls and barriers", air: 0, forest: -1, temp: 0, feedback: "You’re protecting infrastructure, but not addressing root causes. Short-term fix, long-term risk" },
+            { text: "B. Relocate people on the coast inland", air: 0, forest: 0, temp: 0, feedback: "You’ve avoided damage but made no climate progress. A neutral move that buys time" },
+            { text: "C. Invest in restoring mangroves and wetlands", air: 1, forest: 1, temp: 1, feedback: "Wetlands absorb water and carbon. Nature-based defense for coastlines and climate alike" },
+            { text: "D. Ignore it and focus on economic growth", air: -1, forest: -1, temp: -1, feedback: "Rising seas flood your coasts. Forests and cities suffer as no action backfires" }
+          ]
+        },
+        {
+          text: "How do you address temperatures rising in cities?",
+          answers: [
+            { text: "A. Plant trees and install green roofs", air: 1, forest: 1, temp: 2, feedback: "Nature cools cities. You’ve reduced heat, improved air, and brought green to the grey." },
+            { text: "B. Paint buildings white to reflect the sun", air: 0, forest: 0, temp: 1, feedback: "A clever fix that lowers heat. It doesn’t help forests or air, but keeps cities cooler." },
+            { text: "C. Install more air conditioning systems", air: -1, forest: 0, temp: -1, feedback: "Cooling indoors means more emissions outdoors. Temperatures climb." },
+            { text: "D. Do nothing", air: 0, forest: 0, temp: -1, feedback: "Heat builds up in concrete jungles. No action leads to uncomfortable and unhealthy cities." }
+          ]
+        },
+        {
+          text: "You need more housing. Where do you build it?",
+          answers: [
+            { text: "A. In a dense forest", air: 0, forest: -2, temp: -1, feedback: "Destroying forests for housing causes major environmental damage. Forest loss and warming both spike." },
+            { text: "B. On reclaimed industrial land", air: 1, forest: 1, temp: 1, feedback: "Smart reuse! You've revived dead land without harming nature. Forests and air both benefit." },
+            { text: "C. On farmland", air: 0, forest: -1, temp: 0, feedback: "Taking farmland strains food systems, but the forest stays intact. It's a mixed result." },
+            { text: "D. Near a protected river", air: 0, forest: -1, temp: -1, feedback: "This risks water contamination and ecosystem damage. The decision harms the local environment." }
+          ]
+        },
+        {
+          text: "How do you handle waste management?",
+          answers: [
+            { text: "A. Build more landfills", air: -2, forest: -2, temp: -1, feedback: "Landfills pile up pollution and emit methane, a powerful greenhouse gas. Air quality worsens, and the planet heats up." },
+            { text: "B. Expand recycling programs", air: 1, forest: 0, temp: 0, feedback: "Recycling reduces waste and cuts pollution. Air quality improves, less trees are cut, and you’ve taken a step toward a cleaner future." },
+            { text: "C. Export waste to other countries", air: -1, forest: 0, temp: -1, feedback: "Out of sight, out of mind? Not quite. Dumping waste elsewhere shifts the problem but doesn't solve it." },
+            { text: "D. Invest in waste-to-energy plants", air: -1, forest: 0, temp: 0, feedback: "You’ve reduced landfill use, but at the cost of more emissions. It’s cleaner than landfills, but not without drawbacks." }
+          ]
+        },
+        {
+          text: "Your country wants to boost the economy through tourism on the Black Sea. What do you focus on?",
+          answers: [
+            { text: "A. Build large cruise ship terminals", air: -1, forest: -1, temp: -1, feedback: "Cruise ships bring thousands of visitors, but emissions and coastal development degrade the environment. Forests are cleared for parking and roads, and smog settles over the shore." },
+            { text: "B. Promote small-scale eco-tourism", air: 1, forest: 1, temp: 1, feedback: "Eco-tourism flourishes with hiking trails, wetlands tours, and solar-powered lodges. The coast gains income without losing its natural charm." },
+            { text: "C. Host international beach festivals", air: -1, forest: 0, temp: 0, feedback: "The parties draw crowds, but traffic and trash increase. Air quality drops slightly, though forested areas remain untouched." },
+            { text: "D. Build a brand new Resort Spa", air: -1, forest: -2, temp: -1, feedback: "The new Resort Spa requires a lot of space and thus you had to cut down quite a few trees. The resort also produces a large amount of carbon emissions" }
+          ]
+        },
+        {
+          text: "What kind of industry does your government promote?",
+          answers: [
+            { text: "A. Heavy manufacturing", air: -2, forest: -1, temp: -2, feedback: "Your factories are booming—so is pollution. The skies are darker, and the planet's warming faster" },
+            { text: "B. Green tech industry", air: 1, forest: 0, temp: 1, feedback: "A future-forward choice! Clean technologies mean cleaner air and cooler climates. Innovation is on your side" },
+            { text: "C. Mining and extraction", air: -2, forest: -1, temp: -1, feedback: "Digging deeper into the Earth has unleashed pollution and damaged ecosystems. The environment pays the price." },
+            { text: "D. Balanced mix", air: 0, forest: 0, temp: 0, feedback: "A mix keeps the economy steady, but environmental impact is mixed too. You've avoided extremes, but progress is limited" }
+          ]
+        },
+        {
+          text: "An invasive insect species has been introduced to forests in your country, what do you do?",
+          answers: [
+            { text: "A. Send a specialized team to manually remove the species", air: 0, forest: 1, temp: 0, feedback: "Manually removing the species takes time and money. While the team is working on removing them, the invasive species caused damage to the ecosystem and proliferated, making the removal take longer than the ideal." },
+            { text: "B. Introduce natural predators", air: 0, forest: -1, temp: 0, feedback: "Introducing more predators to the ecosystem is a tricky balance. Too many predators, and you have a new problem in your forests." },
+            { text: "C. Launch public awareness and action campaigns.", air: 0, forest: 2, temp: 0, feedback: "People are part of the solution! Citizens will report invasive species, contribute to removal efforts, and slow their spread." },
+            { text: "D. Ignore the issue", air: 0, forest: -2, temp: 0, feedback: "Invasive species take over, harming native species, and disrupting the entire ecosystem." }
+          ]
+        },
+      ]
+
+
+
+
+      let questionIndex = 0
+      let airLevel = 1
+      let forestLevel = 3
+      let tempLevel = 1
+
+
+      function setButtonsEnabled(enabled) {
+        document.querySelectorAll(".answers button").forEach((btn) => {
+          btn.disabled = !enabled
+          btn.style.opacity = enabled ? "1" : "0.6" // Optional: visually indicate disabled state
+          btn.style.cursor = enabled ? "pointer" : "default"
+        })
+      }
+
+
+      function displayQuestion() {
+        if (questionIndex >= questions.length) {
+          document.getElementById("question").innerText =
+            "Game Over! Thanks for playing."
+          document.getElementById("feedback").innerText = ""
+          document
+            .querySelectorAll(".answers button")
+            .forEach((btn) => (btn.style.display = "none"))
+          document.getElementById("nextButton").style.display = "none";
+          document.getElementById("restartButton").style.display = "block"
+          return
+        }
+
+
+        const q = questions[questionIndex]
+        document.getElementById("question").innerText = q.text
+        q.answers.forEach((a, i) => {
+          document.getElementById("btn" + i).innerText = a.text
+          document.getElementById("btn" + i).style.display = "block"
+        })
+        document.getElementById("feedback").innerText = ""
+      }
+
+
+      displayQuestion()
+
+
+      function choose(index) {
+        setButtonsEnabled(false)
+
+
+        const a = questions[questionIndex].answers[index]
+        airLevel = clamp(airLevel + a.air, -10, 10)
+        forestLevel = clamp(forestLevel + a.forest, -10, 10)
+        tempLevel = clamp(tempLevel + a.temp, -10, 10)
+
+
+        document.getElementById("feedback").innerText = a.feedback
+        updateMaps()
+        updateScores()
+        
+        document.getElementById("nextButton").style.display = "inline-block";
+      }
+
+
+      function updateMaps() {
+        document.getElementById("airMap").src = `air_${airLevel}.png`
+        document.getElementById("forestMap").src = `forest_${forestLevel}.png`
+        document.getElementById("tempMap").src = `temp_${tempLevel}.png`
+      }
+
+
+      function updateScores() {
+        document.getElementById("forestScore").innerText = forestLevel
+        document.getElementById("airScore").innerText = airLevel
+        document.getElementById("tempScore").innerText = tempLevel
+      }
+      
+      function nextQuestion() {
+        questionIndex++;
+        displayQuestion();
+        setButtonsEnabled(true);
+        document.getElementById("nextButton").style.display = "none";
+      }
+
+
+      function restartGame() {
+        questionIndex = 0
+        airLevel = 0
+        forestLevel = 0
+        tempLevel = 0
+        updateMaps()
+        updateScores()
+        document.getElementById("restartButton").style.display = "none"
+        displayQuestion()
+      }
+
+
+      function clamp(value, min, max) {
+        return Math.max(min, Math.min(max, value))
+      }
+    </script>
+  </body>
+</html>
